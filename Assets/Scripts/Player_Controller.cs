@@ -3,52 +3,76 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-[RequireComponent(typeof(Rigidbody))]
 
 public class Player_Controller : MonoBehaviour
 {
 
     public bool keyboard_enabled = true;
+    public float gravity = -9.81f;
 
-    private CapsuleCollider _collider;
-    private Rigidbody _body;
-    private CharacterController _controller;
+    public CharacterController controller;
+    public Transform groundCheck;
+    public float groundDistance = 0.3f;
+    public LayerMask groundMask;
 
-    [SerializeField] float jumpForce = 500.0f;
-    [SerializeField] float movementSpeed = 10f;
-    [SerializeField] GameObject _camera;
+    [SerializeField] float jumpForce = 10.0f;
+    [SerializeField] float movementSpeed = 15f;
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        _collider = GetComponent<CapsuleCollider>();
-        _body = GetComponent<Rigidbody>();
-        _controller = GetComponent<CharacterController>();
-    }
+
+    Vector3 velocity;
+    bool isGrounded;
 
     // Update is called once per frame
     void Update(){
         if (keyboard_enabled){
             KeyboardControls();
         }
+        ApplyGroundForce();
+        ApplyGravity();
+        ApplyVelocity();
+    }
+
+    private void ApplyGroundForce(){
+        if (IsGrounded()){
+            if (!isGrounded){
+                velocity.y = 0f;
+                isGrounded = true;
+            }
+            velocity.y -= gravity * Time.deltaTime * Time.deltaTime;
+        }else{
+            isGrounded = false;
+        }
+
+    }
+
+    private void ApplyGravity(){
+        velocity.y += gravity * Time.deltaTime * Time.deltaTime;
+    }
+
+    private void ApplyVelocity(){
+        Debug.Log(velocity);
+        controller.Move(velocity);
     }
 
     private void FlapControlsKeyboard(){
         if (Input.GetButtonDown("Jump")){
-            _body.AddForce(new Vector2(0f, jumpForce));
+            //velocity.y 
+            //controller.Move(;
+            velocity += new Vector3(0f, jumpForce, 0f) * Time.deltaTime;
         }
     }
 
     private bool IsGrounded(){
-        if (_body.velocity.y == 0){return true;}else{return false;}
+        //if (velocity.y == 0){return true;}else{return false;}
+        return Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
     }
 
     private void MovementControlsKeyboard(){
-        Vector3 input = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
-        _controller.Move(input * movementSpeed * Time.deltaTime);
-        if (input != Vector3.zero){
-            gameObject.transform.forward = input; 
-        }
+        float z = Input.GetAxis("Vertical");
+        float x = Input.GetAxis("Horizontal");
+        Vector3 move = transform.right * x + transform.forward * z;
+        //velocity += move * movementSpeed * Time.deltaTime;
+        controller.Move(move * movementSpeed * Time.deltaTime);
     }
 
     private void KeyboardControls(){

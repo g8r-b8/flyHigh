@@ -6,22 +6,28 @@ using UnityEngine;
 public class PlayerCamera : MonoBehaviour
 {
 
-    public float speedH = 2.0f;
-    public float speedV = 2.0f;
+    public float rotSpeed = 300f;
 
-    private float yaw = 0.0f;
-    private float pitch = 0.0f;
+    private float pitch = 1.0f;
 
-    [SerializeField] private GameObject player;
+    public Transform player;
 
+    void Start(){
+
+        // Cursor.lockState = CursorLockMode.Locked;
+    }
+    
     // Update is called once per frame
     void Update(){
         CameraControls();
     }
 
     private void CameraControls(){
-        yaw += speedH * Input.GetAxis("Mouse X");
-        pitch -= speedV * Input.GetAxis("Mouse Y");
-        transform.eulerAngles = new Vector3(pitch, yaw, 0.0f);
+        float yaw = rotSpeed * Input.GetAxis("Mouse X") * Time.deltaTime;
+        float pitchAxis =  rotSpeed * Input.GetAxis("Mouse Y") * Time.deltaTime;
+        pitch -= pitchAxis;
+        pitch = Mathf.Clamp(pitch, -90f, 90f);
+        transform.localRotation = Quaternion.Euler(pitch, 0f, 0f);
+        player.Rotate(Vector3.up * yaw);
     }
 }
